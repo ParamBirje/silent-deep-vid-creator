@@ -1,5 +1,36 @@
-import { AbsoluteFill, Audio, Img, Series, staticFile, useVideoConfig } from 'remotion';
+import { AbsoluteFill, Audio, Img, Series, staticFile, useVideoConfig, interpolate, useCurrentFrame, random } from 'remotion';
 import { VideoMetadata } from './types';
+
+const ZoomImage: React.FC<{ src: string, durationInFrames: number, salt: string }> = ({ src, durationInFrames, salt }) => {
+    const frame = useCurrentFrame();
+
+    // Slow zoom from 1 to 1.15
+    const scale = interpolate(
+        frame,
+        [0, durationInFrames],
+        [1, 1.15],
+        { extrapolateRight: 'clamp' }
+    );
+
+    // Randomize the focal point (transform-origin) based on the image path/index
+    const x = random(`${salt}-x`) * 100;
+    const y = random(`${salt}-y`) * 100;
+
+    return (
+        <AbsoluteFill>
+            <Img
+                src={staticFile(src)}
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    transform: `scale(${scale})`,
+                    transformOrigin: `${x}% ${y}%`,
+                }}
+            />
+        </AbsoluteFill>
+    );
+};
 
 export const MyVideo: React.FC<VideoMetadata> = ({ sections }) => {
     const { fps } = useVideoConfig();
@@ -45,16 +76,11 @@ export const MyVideo: React.FC<VideoMetadata> = ({ sections }) => {
                                                 key={imageIndex}
                                                 durationInFrames={Math.ceil(image.durationInSeconds * fps)}
                                             >
-                                                <AbsoluteFill>
-                                                    <Img
-                                                        src={staticFile(image.path)}
-                                                        style={{
-                                                            width: '100%',
-                                                            height: '100%',
-                                                            objectFit: 'cover'
-                                                        }}
-                                                    />
-                                                </AbsoluteFill>
+                                                <ZoomImage
+                                                    src={image.path}
+                                                    durationInFrames={Math.ceil(image.durationInSeconds * fps)}
+                                                    salt={`${sectionIndex}-${imageIndex}`}
+                                                />
                                             </Series.Sequence>
                                         ))}
                                     </Series>

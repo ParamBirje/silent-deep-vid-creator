@@ -39,7 +39,10 @@ function parseScriptForTitles(scriptPath) {
 
     for (const line of lines) {
         if (line.startsWith('### ')) {
-            const title = line.replace('### ', '').trim();
+            let title = line.replace('### ', '').trim();
+            if (title.includes(' - ')) {
+                title = title.split(' - ')[1].trim();
+            }
             // We'll map them by index since folders are 0-hook, 1-section
             titles[sectionIndex] = title;
             sectionIndex++;
