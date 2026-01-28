@@ -1,0 +1,23 @@
+{
+  "name": "yt-silent-deep",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "start": "remotion studio src/index.ts",
+    "build": "remotion render AutoVideo out/video.mp4 src/index.ts",
+    "make": "node scripts/make-video.js"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.409",
+    "@remotion/renderer": "^4.0.409",
+    "@types/node": "^25.0.10",
+    "@types/react": "^19.2.9",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "remotion": "^4.0.409",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
