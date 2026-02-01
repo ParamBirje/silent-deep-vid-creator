@@ -77,12 +77,13 @@ const TypewriterTitle: React.FC<{ text: string }> = ({ text }) => {
             )}
             <h1 style={{
                 color: 'white',
-                fontSize: 80,
-                fontFamily: 'Arial',
+                fontSize: 70, // Slightly smaller to fit better
+                fontFamily: "'Courier New', Courier, monospace",
+                fontWeight: 'bold',
                 textAlign: 'center',
                 padding: '0 100px',
                 textTransform: 'uppercase',
-                borderRight: frame % 20 < 10 ? '4px solid white' : '4px solid transparent', // Blinking cursor
+                borderRight: frame % 20 < 10 ? '6px solid white' : '6px solid transparent', // Thicker cursor
                 display: 'inline-block'
             }}>
                 {displayText}
