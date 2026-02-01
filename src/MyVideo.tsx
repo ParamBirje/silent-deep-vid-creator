@@ -32,63 +32,108 @@ const ZoomImage: React.FC<{ src: string, durationInFrames: number, salt: string 
     );
 };
 
+const TypewriterTitle: React.FC<{ text: string }> = ({ text }) => {
+    const frame = useCurrentFrame();
+    const { fps } = useVideoConfig();
+
+    const CHARS_PER_FRAME = 0.5;
+    const WAIT_SECONDS = 1;
+
+    const charDuration = Math.ceil(text.length / CHARS_PER_FRAME);
+    const waitFrames = WAIT_SECONDS * fps;
+
+    let displayText = "";
+
+    if (frame < charDuration) {
+        // Typing phase
+        const charsShowing = Math.floor(frame * CHARS_PER_FRAME);
+        displayText = text.substring(0, charsShowing);
+    } else if (frame < charDuration + waitFrames) {
+        // Wait phase
+        displayText = text;
+    } else {
+        // Backspacing phase
+        const backspaceFrame = frame - charDuration - waitFrames;
+        const charsToRemove = Math.floor(backspaceFrame * CHARS_PER_FRAME);
+        displayText = text.substring(0, Math.max(0, text.length - charsToRemove));
+    }
+
+    return (
+        <AbsoluteFill style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'black'
+        }}>
+            <h1 style={{
+                color: 'white',
+                fontSize: 80,
+                fontFamily: 'Arial',
+                textAlign: 'center',
+                padding: '0 100px',
+                textTransform: 'uppercase',
+                borderRight: frame % 20 < 10 ? '4px solid white' : '4px solid transparent', // Blinking cursor
+                display: 'inline-block'
+            }}>
+                {displayText}
+            </h1>
+        </AbsoluteFill>
+    );
+};
+
 export const MyVideo: React.FC<VideoMetadata> = ({ sections }) => {
     const { fps } = useVideoConfig();
-    const TITLE_DURATION_FRAMES = 3 * fps;
+
+    const CHARS_PER_FRAME = 0.5;
+    const WAIT_SECONDS = 1;
+
+    const getTitleDurationFrames = (text: string) => {
+        const charDuration = Math.ceil(text.length / CHARS_PER_FRAME);
+        return (charDuration * 2) + (WAIT_SECONDS * fps);
+    };
 
     return (
         <AbsoluteFill style={{ backgroundColor: 'black' }}>
             <Series>
-                {sections.map((section, sectionIndex) => (
-                    <Series.Sequence
-                        key={sectionIndex}
-                        layout="none"
-                        durationInFrames={TITLE_DURATION_FRAMES + Math.ceil(section.durationInSeconds * fps)}
-                    >
-                        <Series>
-                            {/* Title Card */}
-                            <Series.Sequence durationInFrames={TITLE_DURATION_FRAMES}>
-                                <AbsoluteFill style={{
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    backgroundColor: 'black'
-                                }}>
-                                    <h1 style={{
-                                        color: 'white',
-                                        fontSize: 80,
-                                        fontFamily: 'Arial',
-                                        textAlign: 'center',
-                                        padding: '0 100px',
-                                        textTransform: 'uppercase'
-                                    }}>
-                                        {section.title}
-                                    </h1>
-                                </AbsoluteFill>
-                            </Series.Sequence>
+                {sections.map((section, sectionIndex) => {
+                    const titleFrames = getTitleDurationFrames(section.title);
+                    const sectionFrames = Math.ceil(section.durationInSeconds * fps);
 
-                            {/* Section Content */}
-                            <Series.Sequence durationInFrames={Math.ceil(section.durationInSeconds * fps)}>
-                                <AbsoluteFill>
-                                    <Audio src={staticFile(section.audioPath)} />
-                                    <Series>
-                                        {section.images.map((image, imageIndex) => (
-                                            <Series.Sequence
-                                                key={imageIndex}
-                                                durationInFrames={Math.ceil(image.durationInSeconds * fps)}
-                                            >
-                                                <ZoomImage
-                                                    src={image.path}
+                    return (
+                        <Series.Sequence
+                            key={sectionIndex}
+                            layout="none"
+                            durationInFrames={titleFrames + sectionFrames}
+                        >
+                            <Series>
+                                {/* Typewriter Title Card */}
+                                <Series.Sequence durationInFrames={titleFrames}>
+                                    <TypewriterTitle text={section.title} />
+                                </Series.Sequence>
+
+                                {/* Section Content */}
+                                <Series.Sequence durationInFrames={sectionFrames}>
+                                    <AbsoluteFill>
+                                        <Audio src={staticFile(section.audioPath)} />
+                                        <Series>
+                                            {section.images.map((image, imageIndex) => (
+                                                <Series.Sequence
+                                                    key={imageIndex}
                                                     durationInFrames={Math.ceil(image.durationInSeconds * fps)}
-                                                    salt={`${sectionIndex}-${imageIndex}`}
-                                                />
-                                            </Series.Sequence>
-                                        ))}
-                                    </Series>
-                                </AbsoluteFill>
-                            </Series.Sequence>
-                        </Series>
-                    </Series.Sequence>
-                ))}
+                                                >
+                                                    <ZoomImage
+                                                        src={image.path}
+                                                        durationInFrames={Math.ceil(image.durationInSeconds * fps)}
+                                                        salt={`${sectionIndex}-${imageIndex}`}
+                                                    />
+                                                </Series.Sequence>
+                                            ))}
+                                        </Series>
+                                    </AbsoluteFill>
+                                </Series.Sequence>
+                            </Series>
+                        </Series.Sequence>
+                    );
+                })}
             </Series>
         </AbsoluteFill>
     );
