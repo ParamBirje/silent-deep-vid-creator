@@ -1,5 +1,6 @@
-import { AbsoluteFill, Audio, Img, Series, staticFile, useVideoConfig, interpolate, useCurrentFrame, random } from 'remotion';
+import { AbsoluteFill, Audio, Img, Series, staticFile, useVideoConfig, interpolate, useCurrentFrame, random, Loop } from 'remotion';
 import { VideoMetadata } from './types';
+import { SFX, VIDEO_CONFIG } from './config';
 
 const ZoomImage: React.FC<{ src: string, durationInFrames: number, salt: string }> = ({ src, durationInFrames, salt }) => {
     const frame = useCurrentFrame();
@@ -36,26 +37,31 @@ const TypewriterTitle: React.FC<{ text: string }> = ({ text }) => {
     const frame = useCurrentFrame();
     const { fps } = useVideoConfig();
 
-    const CHARS_PER_FRAME = 0.5;
-    const WAIT_SECONDS = 1;
+    const CHARS_PER_FRAME = VIDEO_CONFIG.CHARS_PER_FRAME;
+    const WAIT_SECONDS = VIDEO_CONFIG.WAIT_SECONDS_AFTER_TYPING;
 
     const charDuration = Math.ceil(text.length / CHARS_PER_FRAME);
     const waitFrames = WAIT_SECONDS * fps;
+    const totalDuration = (charDuration * 2) + waitFrames;
 
     let displayText = "";
+    let isTyping = false;
 
     if (frame < charDuration) {
         // Typing phase
         const charsShowing = Math.floor(frame * CHARS_PER_FRAME);
         displayText = text.substring(0, charsShowing);
+        isTyping = true;
     } else if (frame < charDuration + waitFrames) {
         // Wait phase
         displayText = text;
+        isTyping = false;
     } else {
         // Backspacing phase
         const backspaceFrame = frame - charDuration - waitFrames;
         const charsToRemove = Math.floor(backspaceFrame * CHARS_PER_FRAME);
         displayText = text.substring(0, Math.max(0, text.length - charsToRemove));
+        isTyping = true;
     }
 
     return (
@@ -64,6 +70,11 @@ const TypewriterTitle: React.FC<{ text: string }> = ({ text }) => {
             alignItems: 'center',
             backgroundColor: 'black'
         }}>
+            {isTyping && (
+                <Loop durationInFrames={30}>
+                    <Audio src={staticFile(SFX.KEYBOARD_TYPING)} volume={0.5} />
+                </Loop>
+            )}
             <h1 style={{
                 color: 'white',
                 fontSize: 80,
@@ -83,8 +94,8 @@ const TypewriterTitle: React.FC<{ text: string }> = ({ text }) => {
 export const MyVideo: React.FC<VideoMetadata> = ({ sections }) => {
     const { fps } = useVideoConfig();
 
-    const CHARS_PER_FRAME = 0.5;
-    const WAIT_SECONDS = 1;
+    const CHARS_PER_FRAME = VIDEO_CONFIG.CHARS_PER_FRAME;
+    const WAIT_SECONDS = VIDEO_CONFIG.WAIT_SECONDS_AFTER_TYPING;
 
     const getTitleDurationFrames = (text: string) => {
         const charDuration = Math.ceil(text.length / CHARS_PER_FRAME);
@@ -120,11 +131,14 @@ export const MyVideo: React.FC<VideoMetadata> = ({ sections }) => {
                                                     key={imageIndex}
                                                     durationInFrames={Math.ceil(image.durationInSeconds * fps)}
                                                 >
-                                                    <ZoomImage
-                                                        src={image.path}
-                                                        durationInFrames={Math.ceil(image.durationInSeconds * fps)}
-                                                        salt={`${sectionIndex}-${imageIndex}`}
-                                                    />
+                                                    <AbsoluteFill>
+                                                        <Audio src={staticFile(SFX.MOUSE_CLICK)} volume={0.8} />
+                                                        <ZoomImage
+                                                            src={image.path}
+                                                            durationInFrames={Math.ceil(image.durationInSeconds * fps)}
+                                                            salt={`${sectionIndex}-${imageIndex}`}
+                                                        />
+                                                    </AbsoluteFill>
                                                 </Series.Sequence>
                                             ))}
                                         </Series>

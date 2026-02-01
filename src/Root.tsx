@@ -2,14 +2,15 @@ import { Composition, getInputProps } from 'remotion';
 import { MyVideo } from './MyVideo';
 import metadataJson from './metadata.json';
 import { VideoMetadata } from './types';
+import { VIDEO_CONFIG } from './config';
 
 export const RemotionRoot = () => {
     const props = (getInputProps() as unknown) as VideoMetadata;
     const data = props.sections ? props : (metadataJson as VideoMetadata);
 
-    const fps = 30;
-    const CHARS_PER_FRAME = 0.5; // Moderate speed: 2 frames per character
-    const WAIT_SECONDS = 1;
+    const fps = VIDEO_CONFIG.FPS;
+    const CHARS_PER_FRAME = VIDEO_CONFIG.CHARS_PER_FRAME;
+    const WAIT_SECONDS = VIDEO_CONFIG.WAIT_SECONDS_AFTER_TYPING;
 
     const getTitleDurationFrames = (text: string) => {
         const charDuration = Math.ceil(text.length / CHARS_PER_FRAME);
@@ -29,8 +30,8 @@ export const RemotionRoot = () => {
                 component={MyVideo as any}
                 durationInFrames={totalDurationFrames}
                 fps={fps}
-                width={1920}
-                height={1080}
+                width={VIDEO_CONFIG.WIDTH}
+                height={VIDEO_CONFIG.HEIGHT}
                 defaultProps={data}
             />
         </>
