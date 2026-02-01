@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,7 +21,15 @@ try {
 
     console.log(`Step 2: Rendering video...`);
     // Note: We use the generated metadata.json which is read by Root.tsx
-    execSync(`npx remotion render AutoVideo out/${videoName}.mp4 src/index.ts`, { stdio: 'inherit', cwd: rootDir });
+
+    // Parse CRF from config.ts since we can't easily import TS in this Node script
+    const configPath = path.join(rootDir, 'src/config.ts');
+    const configContent = fs.readFileSync(configPath, 'utf8');
+    const crfMatch = configContent.match(/CRF:\s*(\d+)/);
+    const crf = crfMatch ? crfMatch[1] : 23;
+
+    console.log(`Using CRF: ${crf}`);
+    execSync(`npx remotion render AutoVideo out/${videoName}.mp4 src/index.ts --crf=${crf}`, { stdio: 'inherit', cwd: rootDir });
 
     console.log(`\nSuccess! Video rendered to out/${videoName}.mp4`);
 } catch (error) {

@@ -9,4 +9,5 @@ export const VIDEO_CONFIG = {
     HEIGHT: 1080,
     CHARS_PER_FRAME: 0.5,
     WAIT_SECONDS_AFTER_TYPING: 1,
+    CRF: 25, // 18 is high quality/larger file, 23-28 is standard/optimized
 } as const;
